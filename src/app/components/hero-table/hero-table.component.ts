@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { combineLatest } from 'rxjs';
+import { combineAll, map } from 'rxjs/operators';
 import { DEFAULT_PAGE, Hero, HeroService } from '../../services/hero.service';
 
 @Component({
@@ -7,12 +9,28 @@ import { DEFAULT_PAGE, Hero, HeroService } from '../../services/hero.service';
     styleUrls: ['./hero-table.component.scss'],
 })
 export class HeroTableComponent {
-    heroes$ = this.hero.heroes$;
-    search$ = this.hero.searchBS;
-    page$ = this.hero.userPage$;
-    limit$ = this.hero.limitBS;
-    totalResults$ = this.hero.totalResults$;
-    totalPages$ = this.hero.totalPages$;
+    //view model
+    vm$ = combineLatest([
+        this.hero.heroes$,
+        this.hero.searchBS,
+        this.hero.userPage$,
+        this.hero.limitBS,
+        this.hero.totalResults$,
+        this.hero.totalPages$,
+    ]).pipe(
+        map(([heroes, search, page, limit, totalResults, totalPages]) => {
+            return {
+                heroes,
+                search,
+                page,
+                limit,
+                totalResults,
+                totalPages,
+                disableNext: totalPages === page,
+                disablePrevious: page === 1,
+            };
+        }),
+    );
 
     constructor(public hero: HeroService) {}
 
