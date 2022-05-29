@@ -1,5 +1,5 @@
-<h3>Show spinner: {{ showSpinner }}</h3>
 <ng-container *ngIf="vm$ | async as vm">
+    <h3>Show spinner: {{ vm.loading }}</h3>
     <div class="tool-bar">
         <span class="search-tool">
             <label for="herosearch">Search: </label>

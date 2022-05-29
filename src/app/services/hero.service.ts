@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { debounceTime, map, shareReplay, switchMap } from 'rxjs/operators';
+import { debounceTime, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Hero {
@@ -54,10 +54,12 @@ export class HeroService {
     private searchBS = new BehaviorSubject(DEFAULT_SEARCH);
     private limitBS = new BehaviorSubject(DEFAULT_LIMIT);
     private pageBS = new BehaviorSubject(DEFAULT_PAGE);
+    private loadingBS = new BehaviorSubject(false);
 
     search$ = this.searchBS.asObservable();
     limit$ = this.limitBS.asObservable();
     page$ = this.pageBS.asObservable();
+    loading$ = this.loadingBS.asObservable();
 
     userPage$ = this.pageBS.pipe(map(page => page + 1));
 
@@ -78,11 +80,13 @@ export class HeroService {
 
     private heroesRespose$ = this.params$.pipe(
         debounceTime(500),
+        tap(() => this.loadingBS.next(true)),
         switchMap(incomingParams =>
             this.http.get(HERO_API, {
                 params: incomingParams,
             }),
         ),
+        tap(() => this.loadingBS.next(false)),
         shareReplay(1),
     );
 
