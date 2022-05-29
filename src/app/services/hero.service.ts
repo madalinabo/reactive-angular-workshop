@@ -1,7 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { debounceTime, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import {
+    debounceTime,
+    distinctUntilChanged,
+    map,
+    shareReplay,
+    switchMap,
+    tap,
+} from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Hero {
@@ -63,7 +70,14 @@ export class HeroService {
 
     userPage$ = this.pageBS.pipe(map(page => page + 1));
 
-    params$ = combineLatest([this.searchBS, this.limitBS, this.pageBS]).pipe(
+    params$ = combineLatest([
+        this.searchBS.pipe(debounceTime(500)),
+        this.limitBS,
+        this.pageBS.pipe(debounceTime(500)),
+    ]).pipe(
+        distinctUntilChanged((prev, curr) => {
+            return JSON.stringify(prev) === JSON.stringify(curr);
+        }),
         map(([searchTerm, limit, page]) => {
             const params: any = {
                 apikey: environment.MARVEL_API.PUBLIC_KEY,
@@ -79,7 +93,7 @@ export class HeroService {
     );
 
     private heroesRespose$ = this.params$.pipe(
-        debounceTime(500),
+        //debounceTime(500),
         tap(() => this.loadingBS.next(true)),
         switchMap(incomingParams =>
             this.http.get(HERO_API, {
