@@ -51,9 +51,13 @@ export const DEFAULT_PAGE = 0;
 export class HeroService {
     limits = LIMITS;
 
-    searchBS = new BehaviorSubject(DEFAULT_SEARCH);
-    limitBS = new BehaviorSubject(DEFAULT_LIMIT);
-    pageBS = new BehaviorSubject(DEFAULT_PAGE);
+    private searchBS = new BehaviorSubject(DEFAULT_SEARCH);
+    private limitBS = new BehaviorSubject(DEFAULT_LIMIT);
+    private pageBS = new BehaviorSubject(DEFAULT_PAGE);
+
+    search$ = this.searchBS.asObservable();
+    limit$ = this.limitBS.asObservable();
+    page$ = this.pageBS.asObservable();
 
     userPage$ = this.pageBS.pipe(map(page => page + 1));
 
@@ -95,4 +99,19 @@ export class HeroService {
     );
 
     constructor(private http: HttpClient) {}
+
+    doSearch(term: string) {
+        this.searchBS.next(term);
+        this.pageBS.next(DEFAULT_PAGE);
+    }
+
+    movePageBy(moveBy: number) {
+        const currentPage = this.pageBS.getValue(); //syncronous
+        this.pageBS.next(currentPage + moveBy);
+    }
+
+    setLimit(newLimit: number) {
+        this.limitBS.next(newLimit);
+        this.pageBS.next(DEFAULT_PAGE);
+    }
 }

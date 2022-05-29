@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { combineLatest } from 'rxjs';
-import { combineAll, map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { DEFAULT_PAGE, Hero, HeroService } from '../../services/hero.service';
 
 @Component({
@@ -9,12 +9,14 @@ import { DEFAULT_PAGE, Hero, HeroService } from '../../services/hero.service';
     styleUrls: ['./hero-table.component.scss'],
 })
 export class HeroTableComponent {
+    showSpinner = false;
+
     //view model
     vm$ = combineLatest([
-        this.hero.heroes$,
-        this.hero.searchBS,
+        this.hero.heroes$.pipe(tap(() => (this.showSpinner = false))),
+        this.hero.search$,
         this.hero.userPage$,
-        this.hero.limitBS,
+        this.hero.limit$,
         this.hero.totalResults$,
         this.hero.totalPages$,
     ]).pipe(
@@ -35,17 +37,17 @@ export class HeroTableComponent {
     constructor(public hero: HeroService) {}
 
     doSearch(event: any) {
-        this.hero.searchBS.next(event.target.value);
-        this.hero.pageBS.next(DEFAULT_PAGE);
+        this.showSpinner = true;
+        this.hero.doSearch(event.target.value);
     }
 
     movePage(moveBy: number) {
-        const currentPage = this.hero.pageBS.getValue(); //syncronous
-        this.hero.pageBS.next(currentPage + moveBy);
+        this.showSpinner = true;
+        this.hero.movePageBy(moveBy);
     }
 
     setLimit(limit: number) {
-        this.hero.limitBS.next(limit);
-        this.hero.pageBS.next(DEFAULT_PAGE);
+        this.showSpinner = true;
+        this.hero.setLimit(limit);
     }
 }
